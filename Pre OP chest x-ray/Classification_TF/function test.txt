@@ -1,0 +1,13 @@
+Inference
+
+labels = ['No active lung lesion', 'Old TB']
+
+1. No active lung lesion
+    --> [0.570, 0.416]
+
+2. Old TB
+    --> [0.565, 0.420]
+
+No active lung lesion과 Old TB 모두 0.57정도로 no active lung lesion이라 inference함.
+
+==> Pytorch로 다시 짜보되 efficient net등 모델 바꾸고 그 다음엔 histogram equalization등 전처리 추가해보기
