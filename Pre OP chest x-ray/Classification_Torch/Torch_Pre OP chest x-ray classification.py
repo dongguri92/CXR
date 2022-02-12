@@ -117,5 +117,53 @@ train_dataloader = torch.utils.data.DataLoader(
     train_dataset, batch_size = batch_size, shuffle = True
 )
 
-# 우선 데이터불러오는 class까지 만듦
-# --> dataloader만든 후 efficientnet으로 학습해보기
+# Resnet`
+class Resnet(nn.Module):
+    def __init__(self):
+        super(Resnet, self).__init__()
+        self.conv2d = nn.Conv2d(1, 3, 3, stride=1)
+        self.resnet = models.resnet18()
+        self.FC = nn.Linear(1000, 2)
+
+    def forward(self, x):
+        # resnet의 입력은 [3, N, N]으로
+        # 3개의 채널을 갖기 때문에
+        # resnet 입력 전에 conv2d를 한 층 추가
+        x = F.relu(self.conv2d(x))
+
+        # resnet18추가
+        x = F.relu(self.resnet(x))
+
+        # 마지막 출력에 nn.Linear를 추가
+        x = torch.sigmoid(self.FC(x))
+        return x
+
+# 모델 선언
+model = Resnet()
+
+# model --> DEVICE
+model = Resnet().to(DEVICE)
+optimizer = optim.Adam(model.parameters(), lr = 0.001)
+
+# 학습
+def train(model, train_loader, optimizer, epoch):
+    model.train()
+    for batch_idx, (data, target) in enumerate(train_loader):
+        data, target = data.to(DEVICE), target.to(DEVICE)
+        optimizer.zero_grad()
+        output = model(data)
+        loss = F.cross_entropy(output, target)
+        loss.backward()
+        optimizer.step()
+
+        if batch_idx % 2 == 0:
+            print("Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}".format(
+                epoch,
+                batch_idx * len(data),
+                len(train_loader.dataset),
+                100. * batch_idx / len(train_loader),
+                loss.item()))
+
+EPOCHS = 30
+for epoch in range(1, EPOCHS + 1):
+    train(model, train_dataloader, optimizer, epoch)
